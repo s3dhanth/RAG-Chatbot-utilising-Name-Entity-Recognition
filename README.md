@@ -26,9 +26,12 @@ This repository contains a Gradio application for an RAG Q&A bot with port 8760 
 - use Case if a user wants to view research paper by the author's or publication date? Rag-based llm cannot find similarity of chunks as it is cosin
 - Work Flow user query -> converted to NER (spacy) -> if Person is detected -> Do the metadata filtering with that Author
 ####Example
+
 - Without NER (retrieval extracts chunks of different research paper's (Wrong Output)
+- 
 ![before_ner](https://github.com/user-attachments/assets/e97a25c9-a1b1-484d-9ec4-344dc6a7c953)
 - With NER
+- 
 ![after NER](https://github.com/user-attachments/assets/e6eef061-123a-4479-94c4-3c65b4990701)
 
 ### ChatBot Interface 
