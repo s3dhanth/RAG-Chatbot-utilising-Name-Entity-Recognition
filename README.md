@@ -12,8 +12,8 @@ This repository contains a Gradio application for an RAG Q&A bot with port 8760 
 
 ## Selection of Embedings
 - MiniLM-V2 (. It maps sentences and phrases to a 384-dimensional vector space)
-- Specter Model (specialized in generating document-level embeddings of scientific papers using both textual content (titles, abstracts) and citation relationships. (vector dimension - 786)
--  Trained on scientific papers from Semantic Scholar, SciBERT focuses on understanding the general linguistic structure of scientific language (vector dimension - 786)
+- Specter Model (specialized in embeddings of scientific papers(titles, abstracts) and citation relationships. (vector dimension - 786)
+-  Trained on scientific papers(Semantic Scholar),it focuses on understanding the general of scientific language (vector dimension - 786)
 
 ## Overview of files
 ### Data_Ingestion.py = Scrap the arxiv website to download pdfs to the working dir and store the metadata in csv format.
