@@ -15,18 +15,24 @@ load_dotenv()
 api_key = os.getenv('API_KEY')
 print(api_key)
 from sentence_transformers import SentenceTransformer
-model = SentenceTransformer('all-MiniLM-L6-v2')
+model = SentenceTransformer('allenai-specter')
 
-
+# change the path according to your directory
 DATA_PATH = r'C:\QpiAi'
 
 def load_documents():
     document_loader = PyPDFDirectoryLoader(DATA_PATH)
     return document_loader.load()
+def split_documents(documents:list[Document]):
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=600,
+        chunk_overlap=60,
+        length_function=len,
+        is_separator_regex=False,
+    )
+    return text_splitter.split_documents(documents)
 
 def calculate_chunk_ids(chunks):
-
-    # This will create IDs like "data/monopoly.pdf:6:2"
     # Page Source : Page Number : Chunk Index
 
     last_page_id = None
@@ -52,6 +58,7 @@ def calculate_chunk_ids(chunks):
 
     return chunks
 
+
 def metadata_adding(doc, stored_meta):
     document = doc
     stored_metadata = stored_meta
@@ -71,16 +78,20 @@ def metadata_adding(doc, stored_meta):
             # Access values from the matching metadata entry
             author = matching_metadata.iloc[0]['Author']
             publication_date = matching_metadata.iloc[0]['publication_date']
+            title = matching_metadata.iloc[0]['Title']
+            abstract = matching_metadata.iloc[0]['Abstract']
             
-            # Add the author and publication_date directly to the chunk's metadata
+            # Update document metadata
             doc.metadata['Author'] = author
             doc.metadata['publication_date'] = publication_date
+            doc.metadata['Title'] = title
+            doc.metadata['Abstract'] = abstract
 
     return document 
 
-def add_to_pinecone(chunks: list[Document]):
+def add_to_pinecone(chunks: list[Document],batch_size = 100):
     pc = Pinecone(api_key=api_key)
-    index_name = 'embeddings6'
+    index_name = 'specter'
 
     # Initialize Pinecone
     try:
@@ -106,7 +117,6 @@ def add_to_pinecone(chunks: list[Document]):
     try:
         fetch_response = index.fetch(ids=ids_to_check)
         if fetch_response and 'vectors' in fetch_response:
-
             existing_ids = set(fetch_response['vectors'].keys())
     except Exception as e:
         print(f"Error fetching existing IDs: {e}")
@@ -126,42 +136,44 @@ def add_to_pinecone(chunks: list[Document]):
 
         # Prepare all new chunks for upsert
         new_chunk_ids = [chunk.metadata["id"] for chunk in new_chunks]
-        batch_texts = [str(chunk.page_content) for chunk in new_chunks]  # Force conversion to str
-        embedded_texts = [model.encode(text) for text in batch_texts]  # Get embeddings
+        batch_texts = [str(chunk.page_content) for chunk in new_chunks]  
+        embedded_texts = [model.encode(text) for text in batch_texts] 
         
         vectors_with_metadata = []
         
-        for idx, embedding in enumerate(embedded_texts):
-            authors_list = [author.strip() for author in new_chunks[idx].metadata.get('Author', 'Unknown').split(',')]
-            
-            vectors_with_metadata.append({
-                'id': new_chunk_ids[idx],
-                'values': embedding,
-                'metadata': {
-                    'text': batch_texts[idx],  # Store the text as metadata
-                    'Author': authors_list,  # Author metadata
-                    'publication_date': new_chunks[idx].metadata.get('publication_date', 'Unknown')  # Publication date metadata
-                }
-            })
+        for i in range(0, len(new_chunks), batch_size):
+            vectors_with_metadata = []
+
+            # Process a batch of chunks
+            batch_chunks = new_chunks[i:i + batch_size]
+            batch_embedded_texts = embedded_texts[i:i + batch_size]
+
+            for idx, embedding in enumerate(batch_embedded_texts):
+                authors_list = [author.strip() for author in batch_chunks[idx].metadata.get('Author', 'Unknown').split(',')]
+
+                vectors_with_metadata.append({
+                    'id': batch_chunks[idx].metadata["id"],
+                    'values': embedding,
+                    'metadata': {
+                        'text': batch_texts[idx],  # Store the text as metadata
+                        'Author': authors_list,  # Author metadata
+                        'publication_date': batch_chunks[idx].metadata.get('publication_date', 'Unknown'),  # Publication date metadata
+                        'Title': batch_chunks[idx].metadata.get('Title', 'Unknown'),  # Title metadata
+                        'Abstract': batch_chunks[idx].metadata.get('Abstract', 'Unknown')  # Abstract metadata
+                    }
+                })
         
-        # Upsert embeddings into Pinecone
-        try:
-            index.upsert(vectors=vectors_with_metadata)
-            print("✅ All new documents added")
-        except Exception as e:
-            print(f"Error upserting documents: {e}")
+            # Upsert embeddings into Pinecone
+            try:
+                index.upsert(vectors=vectors_with_metadata)
+                print(" All new documents added")
+            except Exception as e:
+                print(f"Error upserting documents: {e}")
     else:
-        print("✅ No new documents to add")
+        print(" No new documents to add")
 
 document = load_documents()
-def split_documents(documents:list[Document]):
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1700,
-        chunk_overlap=160,
-        length_function=len,
-        is_separator_regex=False,
-    )
-    return text_splitter.split_documents(documents)
+
 doc = split_documents(document)
 stored_meta = pd.read_csv('arxiv_metadata.csv')
 add_to_pinecone(doc)
