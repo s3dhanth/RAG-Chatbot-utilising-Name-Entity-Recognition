@@ -54,7 +54,6 @@ This repository contains a Gradio application for an RAG Q&A bot with port 8760 
 1. Clone the repository:
 
 ```sh
-## For Docker
 git clone https://github.com/s3dhanth/RAG-Chatbot-utilising-Name-Entity-Recognition.git
 
 cd RAG-Chatbot-utilising-Name-Entity-Recognition
