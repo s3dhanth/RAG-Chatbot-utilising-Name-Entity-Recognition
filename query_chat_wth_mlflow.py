@@ -1,39 +1,25 @@
-import gradio as gr
 from langchain.prompts import ChatPromptTemplate
 from langchain_community.llms.ollama import Ollama
 import pandas as pd
 from sentence_transformers import SentenceTransformer
 import spacy
-from fuzzywuzzy import fuzz, process
 from pinecone import Pinecone
-import mlflow 
-from dotenv import load_dotenv
-import os
-load_dotenv()
+import spacy
+
+
+nlp = spacy.load("en_core_web_lg")
+stored_meta = pd.read_csv('arxiv_metadata.csv')
+model = SentenceTransformer('allenai-specter')
 
 # Get the API_KEY
 api_key = os.getenv('API_KEY')
-nlp = spacy.load("en_core_web_lg")
 stored_meta = pd.read_csv('arxiv_metadata.csv')
-model = SentenceTransformer('all-MiniLM-L6-v2')
-all_authors = stored_meta['Author'].str.split(',').tolist()
-flattened_authors = [author.strip() for sublist in all_authors for author in sublist]
-unique_authors = list(set(flattened_authors))
 
 # Start the MLflow tracking
 mlflow.set_experiment("Chatbot Queries Tracking")
 mlflow.set_tracking_url('hit mlflow ui in terminal and paste the url here')
 
-def extract_author_ner(query):
-    doc = nlp(query)
-    for ent in doc.ents:
-        if ent.label_ == "PERSON":
-            return ent.text.strip()  # Return the first person name found
-    return None
 
-def fuzzy_match_author(extracted_author, unique_authors, threshold=80):
-    matches = process.extractBests(extracted_author, unique_authors, score_cutoff=threshold)
-    return matches
 
 def retrieve_from_pinecone(query_text: str, top_k=10, author_name: list = None):
     pc = Pinecone(api_key=api_key)
@@ -41,9 +27,6 @@ def retrieve_from_pinecone(query_text: str, top_k=10, author_name: list = None):
     index = pc.Index(index_name)
     query_embedding = model.encode(query_text).tolist()
     metadata_filter = None
-    if author_name and isinstance(author_name, list):
-        metadata_filter = {"Author": {"$in": author_name}}
-
     try:
         results = index.query(
             vector=query_embedding,
@@ -56,7 +39,7 @@ def retrieve_from_pinecone(query_text: str, top_k=10, author_name: list = None):
         print(f"Error during Pinecone query: {e}")
         return
 
-    print(f"Top {top_k} results for the query '{query_text}' with author filtering:")
+    print(f"Top {top_k} results for the query '{query_text}'")
     for i, match in enumerate(results['matches']):
         print(f"\nResult {i+1}:")
         print(f"  - ID: {match['id']}")
@@ -102,17 +85,8 @@ def chatbot_interface(query):
         if combined_query in query_cache:
             response_text = query_cache[combined_query]
         else:
-            extracted_authors = extract_author_ner(combined_query)
-            if extracted_authors:
-                matched_authors = fuzzy_match_author(extracted_authors, unique_authors)
-                if matched_authors:
-                    matched_author_names = [match[0] for match in matched_authors if isinstance(match[0], str)]
-                    results = retrieve_from_pinecone(combined_query, author_name=matched_author_names)
-                else:
-                    results = retrieve_from_pinecone(combined_query)
-            else:
-                results = retrieve_from_pinecone(combined_query)
-
+             results = retrieve_from_pinecone(combined_query)
+        
             if results and 'matches' in results and len(results['matches']) > 0:
                 highest_score = results['matches'][0]['score']
                 if highest_score < confidence_threshold:
