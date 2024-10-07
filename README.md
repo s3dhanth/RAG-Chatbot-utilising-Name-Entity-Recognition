@@ -16,7 +16,7 @@ This repository contains a Gradio application for an RAG Q&A bot with port 8760 
 - Scibert -Trained on scientific papers(Semantic Scholar),it focuses on understanding the general of scientific language (vector dimension - 786)
 
 ## Chunking Strategy (Hybrid)
-- Document is divided into seperate sections found in research paper to ensure each chunk has a specific context
+##### Document is divided into seperate sections found in research paper to ensure each chunk has a specific context
 - eg ['Introduction', 'Methodology', 'Related Works','Experiments','Results', 'Discussion','Discussion and Conclusion','Training','METHOD','DISCUSSION','Conclusion', 'Related Work', 'References']
 - Infused with a numberic number eg ( '1 Introduction', 2 Methodology' )
 ## Overview of files
