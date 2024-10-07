@@ -15,6 +15,10 @@ This repository contains a Gradio application for an RAG Q&A bot with port 8760 
 - Specter Model (specialized in embeddings of scientific papers(titles, abstracts) and citation relationships. (vector dimension - 786)
 - Scibert -Trained on scientific papers(Semantic Scholar),it focuses on understanding the general of scientific language (vector dimension - 786)
 
+## Chunking Strategy (Hybrid)
+- Document is divided into seperate sections found in research paper to ensure each chunk has a specific context
+- eg ['Introduction', 'Methodology', 'Related Works','Experiments','Results', 'Discussion','Discussion and Conclusion','Training','METHOD','DISCUSSION','Conclusion', 'Related Work', 'References']
+- Infused with a numberic number eg ( '1 Introduction', 2 Methodology' )
 ## Overview of files
 ### Data_Ingestion.py = Scrap the arxiv website to download pdfs to the working dir and store the metadata in csv format.
 ![metadata](https://github.com/user-attachments/assets/e314da9e-07a0-473a-9f5e-f1d8ea588690)
