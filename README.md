@@ -20,7 +20,7 @@ This repository contains a Gradio application for an RAG Q&A bot with port 8760 
 - eg ['Introduction', 'Methodology', 'Related Works','Experiments','Results', 'Discussion','Discussion and Conclusion','Training','METHOD','DISCUSSION','Conclusion', 'Related Work', 'References']
 - Infused with a numberic number eg ( '1 Introduction', 2 Methodology' )
 
-#### Visualisation of avg. Number of tokens in each chunk (to get the idea of max Token imp. for embeddings)
+## Visualisation of avg. Number of tokens in each chunk (to get the idea of max Token imp. for embeddings)
 
 ![tokens](https://github.com/user-attachments/assets/d4e0c7f5-b06a-4bc8-963f-fcb3400830a8)
 
