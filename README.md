@@ -19,6 +19,11 @@ This repository contains a Gradio application for an RAG Q&A bot with port 8760 
 #### Document is divided into seperate sections found in research paper to ensure each chunk has a specific context
 - eg ['Introduction', 'Methodology', 'Related Works','Experiments','Results', 'Discussion','Discussion and Conclusion','Training','METHOD','DISCUSSION','Conclusion', 'Related Work', 'References']
 - Infused with a numberic number eg ( '1 Introduction', 2 Methodology' )
+
+#### Visualisation of avg. Number of tokens in each chunk (to get the idea of max Token imp. for embeddings)
+
+![tokens](https://github.com/user-attachments/assets/d4e0c7f5-b06a-4bc8-963f-fcb3400830a8)
+
 ## Overview of files
 ### Data_Ingestion.py = Scrap the arxiv website to download pdfs to the working dir and store the metadata in csv format.
 ![metadata](https://github.com/user-attachments/assets/e314da9e-07a0-473a-9f5e-f1d8ea588690)
