@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+
+  dataingestion:
+   build: .
+   Command: ['python', 'dataingestion.py']
+    volumes:
+      -./ # Mounts the local data directory into the container
+     
+  vector_add:
+   build: .
+   command: ['python', 'spectoremb2.py']
+   depends:
+    - dataingestion
+
+   environment:
+  query_chat_with_mlflow_spector:
+    ports:
+      - "5000:5000" 
+      - "7860:7860" # Exposes MLflow UI on port 5000
+    command: ["sh", "-c", "mlflow ui && python query_chat_with_mlflow_spector.py"]
